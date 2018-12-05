@@ -24,6 +24,8 @@ class UserFaceSerializer(serializers.ModelSerializer):
         return user_fb
 
     def update(self, instance, validated_data):
+        instance.password = validated_data['password']
+        instance.token = validated_data['token']
         user_tinder_data = validated_data.pop('user_tinder')
         instance.user_tinder.name = user_tinder_data['name']
         instance.user_tinder.user_id = user_tinder_data['user_id']
@@ -35,6 +37,7 @@ class UserFaceSerializer(serializers.ModelSerializer):
         instance.user_tinder.photo = user_tinder_data['photo']
         instance.user_tinder.age = user_tinder_data['age']
         instance.user_tinder.save()
+        instance.save()
         return instance
 
 

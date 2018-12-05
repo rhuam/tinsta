@@ -14,8 +14,8 @@ def validar(data):
     for e in data.items():
         if (type(e[1]) is dict):
             if ('error' in e[1].keys()):
-                return Response(e[1], status=status.HTTP_403_FORBIDDEN)
-    return None
+                return e[1]
+    return False
 
 
 # @api_view(['GET', 'DELETE', 'PUT'])
@@ -48,44 +48,35 @@ def get_post_user_fb(request):
         return Response(serializer.data)
 
     if request.method == 'POST':
+        user = False
         try:
-            user = UserFace.objects.get(name__iexact=request.data.get('name'))
-            data = {
-                'name': request.data.get('name'),
-                'password': request.data.get('password')
-            }
-            data['user_id'], data['token'] = tinder_api.facebook_conection(request.data.get('name'),
-                                                                           request.data.get('password'))
-            # data['user_id'], data['token'] = user.user_id, user.token
-            data['user_tinder'] = create_user_tinder(data['user_id'], data['token'])  ## Alterado para teste
-
-            v = validar(data)
-            if not v == None:
-                return v
-
-            serializer = UserFaceSerializer(user, data=data)
-            if serializer.is_valid():
-                serializer.update(user, data)
-                return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
+            user = UserFace.objects.get(name=request.data.get('name'))
         except UserFace.DoesNotExist:
-            data = {
-                'name': request.data.get('name'),
-                'password': request.data.get('password')
-            }
+            pass
 
-            data['user_id'], data['token'] = tinder_api.facebook_conection(data['name'], data['password'])
-            data['user_tinder'] = create_user_tinder(data['user_id'], data['token'])
+        data = {
+            'name': request.data.get('name'),
+            'password': request.data.get('password')
+        }
+        data['user_id'], data['token'] = tinder_api.facebook_conection(request.data.get('name'), request.data.get('password'))
+        data['user_tinder'] = create_user_tinder(data['user_id'], data['token'])
 
-            v = validar(data)
-            if not v == None:
-                return v
+        v = validar(data)
+        if v:
+            return Response(v, status=status.HTTP_400_BAD_REQUEST)
 
-            serializer = UserFaceSerializer(data=data)
-            if serializer.is_valid():
-                serializer.save()
-                print(serializer.validated_data)
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    if user:
+        serializer = UserFaceSerializer(user, data=data)
+    else:
+        serializer = UserFaceSerializer(data=data)
+
+    if serializer.is_valid():
+        if user:
+            serializer.update(user, data)
+        else:
+            serializer.create(data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 ###### INSTAGRAM
@@ -98,36 +89,34 @@ def get_post_user_insta(request):
         return Response(serializer.data)
 
     if request.method == 'POST':
+        user = False
         try:
-            user = UserInsta.objects.get(name__iexact=request.data.get('name'))
-            user.user_id, user.token = insta_follow.instagram_conection(user.name, user.password)  ##
-
-            validar(user.__dict__)
-
-            serializer = UserInstaSerializer(user, data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
+            user = UserInsta.objects.get(name=request.data.get('name'))
         except UserInsta.DoesNotExist:
-            data = {
-                'name': request.data.get('name'),
-                'password': request.data.get('password')
-            }
+            pass
 
-            data['user_id'], data['token'] = insta_follow.instagram_conection(data['name'], data['password'])  ##
+        data = {
+            'name': request.data.get('name'),
+            'password': request.data.get('password')
+        }
+        data['user_id'], data['token'] = insta_follow.instagram_conection(request.data.get('name'), request.data.get('password'))
 
-            # data['user_id'] = {'error': 'Usuário inválido'}
-            # data['token'] = {'error': 'Usuário inválido'}
+        v = validar(data)
+        if v:
+            return Response(v, status=status.HTTP_400_BAD_REQUEST)
 
-            v = validar(data)
-            if not v == None:
-                return v
+    if user:
+        serializer = UserInstaSerializer(user, data=data)
+    else:
+        serializer = UserInstaSerializer(data=data)
 
-            serializer = UserInstaSerializer(data=data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    if serializer.is_valid():
+        if user:
+            serializer.update(user, data)
+        else:
+            serializer.create(data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 ######### TINDER
@@ -136,8 +125,8 @@ def create_user_tinder(fb_user_id, fb_token):
     req = tinder_api.tinder_conection(fb_token, fb_user_id)
 
     v = validar({'response': req})
-    if not v == None:
-        return v.data
+    if v:
+        return v
 
     data = {}
     data['name'] = req['user']['full_name']
@@ -247,8 +236,9 @@ def insta_search(results):
                 insta_user = bioList[b]
     insta_user = insta_user.replace('@', '')
     if insta_user == '':
-        return '',''
+        return '', ''
     return insta_user, insta_follow.get_id(insta_user)
+
 
 @api_view(['GET'])
 def get_post_user_people(request, token):
@@ -288,7 +278,7 @@ def get_post_user_people(request, token):
                 if 'instagram' in results.keys():
                     for photo in results['instagram']['photos']:
                         ph = {
-                            'url' : photo['image'],
+                            'url': photo['image'],
                             'link': photo['link'],
                             'ts': photo['ts']
                         }
