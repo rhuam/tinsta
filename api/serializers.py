@@ -44,7 +44,7 @@ class UserFaceSerializer(serializers.ModelSerializer):
 class UserInstaSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserInsta
-        fields = ('name', 'password', 'user_id', 'token', 'created_at', 'updated_at')
+        fields = ('name', 'password', 'user_id', 'token', 'urlgen', 'mid', 'created_at', 'updated_at')
 
 
 class PhotosPeopleSerializer(serializers.ModelSerializer):

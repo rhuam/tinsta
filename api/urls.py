@@ -1,7 +1,11 @@
-from django.conf.urls import url
+from django.conf.urls import url,include
 from . import views
+from rest_framework import routers
+
+
 
 urlpatterns = [
+    url(r'^$', views.index),
     # url(
     #     r'^api/v1/users_fb/(?P<pk>[0-9]+)$',
     #     views.get_delete_update_user_fb,
@@ -43,8 +47,8 @@ urlpatterns = [
     #     name='get_post_user_people'
     # ),
 url(
-        r'^api/v1/insta_follow/(?P<token>[a-zA-Z0-9+_\-]+)/(?P<insta_user>[a-zA-Z0-9+_\-]+)/(?P<user_follow>[a-zA-Z0-9+_\-]+)$',
-        views.get_follow_user,
-        name='get_follow_user'
+        r'^api/v1/insta_follow/$',
+        views.post_follow_user,
+        name='post_follow_user'
     ),
 ]
