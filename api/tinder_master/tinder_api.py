@@ -4,6 +4,13 @@ from api.tinder_master import fb_auth_token
 
 import requests
 
+class TinderErro(Exception):
+    def __init__(self, valor):
+        self.valor = valor
+    def __str__(self):
+        return repr({'error': self.valor})
+
+
 headers = {
     'app_version': '6.9.4',
     'platform': 'ios',
@@ -13,6 +20,8 @@ headers = {
 }
 
 host = 'https://api.gotinder.com'
+
+
 def get_auth_token(fb_auth_token, fb_user_id):
     if "error" in fb_auth_token:
         return {"error": "could not retrieve fb_auth_token"}
@@ -28,7 +37,7 @@ def get_auth_token(fb_auth_token, fb_user_id):
     if 'token' in req.json():
         return req.json()
     else:
-        return {"error": "Algo deu errado. Desculpe, mas não conseguimos autorizá-lo."}
+        raise TinderErro("Acesso não autorizado")
 
     # try:
     #     print(req.json())
@@ -221,16 +230,19 @@ def superlike(person_id):
         print("Something went wrong. Could not superlike:", e)
 
 
-def like(person_id):
+def like(person_id, tinder_auth_token):
+    headers.update({"X-Auth-Token": tinder_auth_token})
     try:
         url = host + '/like/%s' % person_id
         r = requests.get(url, headers=headers)
+        print(r.json())
         return r.json()
     except requests.exceptions.RequestException as e:
         print("Something went wrong. Could not like:", e)
 
 
-def dislike(person_id):
+def dislike(person_id, tinder_auth_token):
+    headers.update({"X-Auth-Token": tinder_auth_token})
     try:
         url = host + '/pass/%s' % person_id
         r = requests.get(url, headers=headers)

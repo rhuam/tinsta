@@ -6,49 +6,45 @@ from rest_framework import routers
 
 urlpatterns = [
     url(r'^$', views.index),
-    # url(
-    #     r'^api/v1/users_fb/(?P<pk>[0-9]+)$',
-    #     views.get_delete_update_user_fb,
-    #     name='get_delete_update_FB'
-    # ),
+    url(
+        r'^api/v1/users_fb/([a-zA-Z0-9]+)$',
+        views.get_user_fb,
+        name='get_user_fb'
+    ),
     url(
         r'^api/v1/users_fb/$',
-        views.get_post_user_fb,
-        name='get_post_FB'
+        views.post_login_facebook_tinder,
+        name='post_login_facebook_tinder'
     ),
-    # url(
-    #     r'^api/v1/users_insta/(?P<pk>[0-9]+)$',
-    #     views.get_delete_update_user_insta,
-    #     name='get_delete_update_user_insta'
-    # ),
+    url(
+        r'^api/v1/users_insta/([a-zA-Z0-9]+)$',
+        views.get_user_instagram,
+        name='get_user_instagram'
+    ),
     url(
         r'^api/v1/users_insta/$',
-        views.get_post_user_insta,
-        name='get_post_user_insta'
-    ),
-    # url(
-    #     r'^api/v1/users_tinder/(?P<pk>[0-9]+)$',
-    #     views.get_delete_update_user_tinder,
-    #     name='get_delete_update_user_tinder'
-    # ),
-    url(
-        r'^api/v1/users_tinder/$',
-        views.get_post_user_tinder,
-        name='get_post_user_tinder'
+        views.post_login_instagram,
+        name='post_login_instagram'
     ),
     url(
-        r'^api/v1/users_people/(?P<token>[a-zA-Z0-9+_\-]+)$',
-        views.get_post_user_people,
-        name='get_post_user_people'
+        # r'^api/v1/follow_insta/([a-zA-Z0-9_.+-]+)/([a-zA-Z0-9_.+-]+)$',
+        r'^api/v1/follow_insta/$',
+        views.post_follow_instagram,
+        name='post_follow_instagram'
     ),
-    # url(
-    #     r'^api/v1/users_people/$',
-    #     views.get_post_user_people,
-    #     name='get_post_user_people'
-    # ),
-url(
-        r'^api/v1/insta_follow/$',
-        views.post_follow_user,
-        name='post_follow_user'
+    url(
+        r'^api/v1/dislike_tinder/$',
+        views.post_dislike_tinder,
+        name='post_dislike_tinder'
     ),
+    url(
+        r'^api/v1/users_tinder/([a-zA-Z0-9]+)$',
+        views.post_update_tinder,
+        name='post_update_tinder'
+    ),
+    url(
+        r'^api/v1/users_people/([a-zA-Z0-9+_\-]+)$',
+        views.get_user_people,
+        name='get_user_people'
+    )
 ]

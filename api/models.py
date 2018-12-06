@@ -38,10 +38,7 @@ class UserInsta(models.Model):
     name = models.CharField(max_length=255)
     password = models.CharField(max_length=255)
     user_id = models.CharField(max_length=255)
-    token = models.CharField(max_length=255)
-    urlgen = models.CharField(max_length=255, null=True)
-    mid = models.CharField(max_length=255, null=True)
-    sessionid = models.CharField(max_length=1024, null=True)
+    session = models.BinaryField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

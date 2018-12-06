@@ -1,5 +1,11 @@
 from rest_framework import serializers
 from .models import UserFace, UserInsta, UserTinder, People, PhotosPeople
+import requests
+
+
+class SessionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = requests.Session()
 
 
 class UserTinderSerializer(serializers.ModelSerializer):
@@ -44,7 +50,7 @@ class UserFaceSerializer(serializers.ModelSerializer):
 class UserInstaSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserInsta
-        fields = ('name', 'password', 'user_id', 'token', 'urlgen', 'mid', 'created_at', 'updated_at')
+        fields = ('name', 'password', 'user_id', 'created_at', 'updated_at')
 
 
 class PhotosPeopleSerializer(serializers.ModelSerializer):
