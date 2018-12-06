@@ -179,12 +179,15 @@ def post_update_tinder(request, pk):
 
         serializer = UserInstaSerializer(user)
         if serializer.is_valid():
+            tinder_api.change_preferences(age_filter_min=data['min_age'],
+                                          age_filter_max=data['max_age'],
+                                          gender=data['gender_filter'],
+                                          distance_filter=data['distance_filter'])
             serializer.update(user, data)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     except UserInsta.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
-
 
 ##### PEOPLE SEARCH
 
