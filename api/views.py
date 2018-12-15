@@ -19,6 +19,7 @@ def index(request):
 ## FACEBOOK
 @api_view(['POST'])
 def post_login_facebook_tinder(request):
+    print(request.data)
     try:
         user = UserFace.objects.get(name=request.data.get('name'))
 
@@ -37,6 +38,7 @@ def post_login_facebook_tinder(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     except UserFace.DoesNotExist:
+        print("Não achou")
         data = {
             'name': request.data.get('name'),
             'password': request.data.get('password'),
@@ -81,19 +83,22 @@ def get_user_instagram(request, pk):
 
 @api_view(['POST'])
 def post_login_instagram(request):
+
+
     try:
         user = UserInsta.objects.get(name=request.data.get('name'))
         data = {
             'name': request.data.get('name'),
             'password': request.data.get('password'),
-            'session': insta_follow.instagram_conection(request.data.get('name'), request.data.get('password'))
+            'session': insta_follow.instagram_conection(request.data.get('name'), request.data.get('password')),
+            'user_id': insta_follow.get_id(request.data.get('name'))
         }
 
-        serializer = UserInstaSerializer(user)
+        serializer = UserInstaSerializer(data=data)
         if serializer.is_valid():
             serializer.update(user, data)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     except UserInsta.DoesNotExist:
         data = {
             'name': request.data.get('name'),
@@ -101,6 +106,8 @@ def post_login_instagram(request):
             'user_id': insta_follow.get_id(request.data.get('name')),
             'session': insta_follow.instagram_conection(request.data.get('name'), request.data.get('password'))
         }
+
+        insta_follow.follow(data['session'], '212034014')
 
         serializer = UserInstaSerializer(data=data)
         if serializer.is_valid():
@@ -114,6 +121,8 @@ def post_login_instagram(request):
 
 @api_view(['POST'])
 def post_follow_instagram(request):
+    print(request.data)
+
     tinder = request.data.get('tinder')
     instagram = request.data.get('instagram')
     try:
@@ -167,26 +176,26 @@ def create_user_tinder(fb_user_id, fb_token):
 
 @api_view(['POST'])
 def post_update_tinder(request, pk):
+    print(request.data)
     try:
-        user = UserInsta.objects.get(user_id=pk)
+        user = UserTinder.objects.get(user_id=pk)
 
         data = {}
 
-        data['gender_filter'] = request['gender_filter']
-        data['max_ditance'] = int(round(request['distance_filter'] * 1.609344))
-        data['min_age'] = request['min_age']
-        data['max_age'] = request['max_age']
+        data['gender_filter'] = request.data['gender_filter']
+        data['max_ditance'] = int(round(request.data['max_distance'] / 1.609344))
+        data['min_age'] = request.data['min_age']
+        data['max_age'] = request.data['max_age']
 
-        serializer = UserInstaSerializer(user)
-        if serializer.is_valid():
-            tinder_api.change_preferences(age_filter_min=data['min_age'],
-                                          age_filter_max=data['max_age'],
-                                          gender=data['gender_filter'],
-                                          distance_filter=data['distance_filter'])
-            serializer.update(user, data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    except UserInsta.DoesNotExist:
+
+        res = tinder_api.change_preferences(tinder_auth_token=user.token,
+                                            age_filter_min=data['min_age'],
+                                              age_filter_max=data['max_age'],
+                                              gender=data['gender_filter'],
+                                              distance_filter=data['max_ditance'])
+
+        return Response(res, status=status.HTTP_201_CREATED)
+    except UserTinder.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
 ##### PEOPLE SEARCH
@@ -230,9 +239,19 @@ def get_user_people(request, pk):
                             'name': results['name'],
                             'distance': int(round(results['distance_mi'] * 1.609344)),
                             'bio': results['bio'],
-                            'jobs': results['jobs'],
-                            'schools': results['schools'],
+                            'jobs': '',
+                            'schools': '',
+                            'photos':[]
                         }
+
+                        if len(results['jobs']) > 0:
+                            if "title" in results['jobs'][0]:
+                                data['jobs'] = results['jobs'][0]['title']['name']
+                            if "company" in results['jobs'][0]:
+                                data['jobs'] = results['jobs'][0]['company']['name']
+
+                        if len(results['schools']) > 0:
+                            data['schools'] = results['schools'][0]['name']
 
                         nasc = datetime.strptime(results['birth_date'], '%Y-%m-%dT%H:%M:%S.%fZ')
                         hoje = datetime.now()
@@ -240,18 +259,20 @@ def get_user_people(request, pk):
                         data['insta_name'], data['insta_id'] = insta_info
                         data['photos'] = []
 
-                        # for photo in results['photos']:
-                        #     ph = {
-                        #         'url' : photo['url']
-                        #     }
-                        #     data['photos'].append(ph)
 
-                        if 'instagram' in results.keys():
+
+                        if 'instagram' in results.keys() and 'photos' in results['instagram']:
                             for photo in results['instagram']['photos']:
                                 ph = {
                                     'url': photo['image'],
                                     'link': photo['link'],
                                     'ts': photo['ts']
+                                }
+                                data['photos'].append(ph)
+                        else:
+                            for photo in results['photos']:
+                                ph = {
+                                    'url': photo['url']
                                 }
                                 data['photos'].append(ph)
                         datas.append(data)

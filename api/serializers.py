@@ -12,7 +12,7 @@ class UserTinderSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserTinder
         fields = (
-            'name', 'fb_user_id', 'user_id', 'token', 'age', 'gender_filter', 'max_ditance', 'min_age', 'max_age',
+            'name', 'user_id', 'token', 'age', 'gender_filter', 'max_ditance', 'min_age', 'max_age',
             'photo', 'created_at', 'updated_at')
 
 
@@ -21,7 +21,7 @@ class UserFaceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserFace
-        fields = ('name', 'password', 'user_id', 'token', 'created_at', 'updated_at', 'user_tinder')
+        fields = ('name', 'user_id', 'token', 'created_at', 'updated_at', 'user_tinder')
 
     def create(self, validated_data):
         user_tinder_data = validated_data.pop('user_tinder')

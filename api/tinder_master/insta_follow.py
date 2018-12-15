@@ -61,7 +61,6 @@ def instagram_conection(username, password):
     response = session.post(login_route, data=post_data, allow_redirects=True)
     response_data = json.loads(response.text)
 
-
     if response_data['authenticated']:
         session.headers.update({
             'X-CSRFToken': response.cookies['csrftoken']

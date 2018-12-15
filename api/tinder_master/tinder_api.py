@@ -110,7 +110,7 @@ def get_self():
         print("Something went wrong. Could not get your data:", e)
 
 
-def change_preferences(**kwargs):
+def change_preferences(tinder_auth_token, **kwargs):
     '''
     ex: change_preferences(age_filter_min=30, gender=0)
     kwargs: a dictionary - whose keys become separate keyword arguments and the values become values of these arguments
@@ -122,13 +122,18 @@ def change_preferences(**kwargs):
     discoverable: true | false
     {"photo_optimizer_enabled":false}
     '''
+
+    headers.update({"X-Auth-Token": tinder_auth_token})
+
     try:
         url = host + '/profile'
+        print(json.dumps(kwargs))
         r = requests.post(url, headers=headers, data=json.dumps(kwargs))
         return r.json()
     except requests.exceptions.RequestException as e:
         print("Something went wrong. Could not change your preferences:", e)
-
+    except Exception:
+        return {"error": "Não autorizado"}
 
 def get_meta():
     '''
